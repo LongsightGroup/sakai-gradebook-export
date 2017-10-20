@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Predicate;
 
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -117,7 +118,18 @@ public class GradebookExportByTerm implements Job {
 					log.info("No assignments for site: " + siteId + ", skipping.");
 					continue;
 				}
-				log.debug("Assignments size: " + assignments.size());
+
+				int previousSize = assignments.size();
+				log.debug("Assignments size: " + previousSize);
+
+				// Optionally, filter out non-released assignments
+				boolean releasedOnly = serverConfigurationService.getBoolean("gradebook.export.releasedonly", false);
+				if (releasedOnly) {
+					Predicate<Assignment> nonreleasedPredicate = p-> p.isReleased() == false;
+					assignments.removeIf(nonreleasedPredicate);
+					log.debug("Filtered assignments: new size=" + assignments.size());
+				}
+
 
 				//get course grades. This uses entered grades preferentially
 				Map<String, String> courseGrades = gradebookService.getImportCourseGrade(gradebook.getUid()); 
