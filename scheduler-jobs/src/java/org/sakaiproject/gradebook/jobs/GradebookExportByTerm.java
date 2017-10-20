@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -75,8 +76,8 @@ public class GradebookExportByTerm implements Job {
 
 		//get all sites that match the criteria
 		String[] termEids = serverConfigurationService.getStrings("gradebook.export.term");
-		if (termEids.length < 1) {
-			termEids[0] = getMostRecentTerm();
+		if (termEids == null || termEids.length < 1) {
+			termEids = getCurrentTerms();
 		}
 
 		// Loop through all terms provided in sakai.properties
@@ -434,7 +435,8 @@ public class GradebookExportByTerm implements Job {
 	 * Get the most recent active term
 	 * @return
 	 */
-	private String getMostRecentTerm() {
+	private String[] getCurrentTerms() {
+		Set<String> termSet = new HashSet<>();
 		
 		List<AcademicSession> sessions = courseManagementService.getCurrentAcademicSessions();
 		
@@ -445,10 +447,11 @@ public class GradebookExportByTerm implements Job {
 		}
 				
 		for(AcademicSession as: sessions) {
+			termSet.add(as.getEid());
 			log.debug("term: " + as.getEid());
 		}
 		
-		return sessions.get(sessions.size()-1).getEid();
+		return termSet.toArray(new String[termSet.size()]);
 
 	}
 	
