@@ -176,10 +176,17 @@ public class GradebookExportByTerm implements Job {
 			if(!grades.isEmpty()) {			
 				
 				String file;
+				File dir;
 				if (StringUtils.endsWith(getOutputPath(), File.separator)) {
-					file = getOutputPath() + siteId + ".csv";
+					dir = new File(getOutputPath() + termEid);
+					file = getOutputPath() + termEid + File.separator + siteId + ".csv";
 				} else {
-					file = getOutputPath() + File.separator + siteId + ".csv";
+					dir = new File(getOutputPath() + File.separator + termEid);
+					file = getOutputPath() + File.separator + termEid + File.separator + siteId + ".csv";
+				}
+
+				if (!dir.exists()) {
+					dir.mkdir();
 				}
 						
 				//delete existing file so we know the data is current
