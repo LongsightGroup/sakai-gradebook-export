@@ -97,11 +97,11 @@ public class GradebookExportByTerm implements Job {
 
 			//get users in site, skip if none
 			List<User> users = getValidUsersInSite(siteId);
-			Collections.sort(users, new LastNameComparator());
 			if(users == null || users.isEmpty()) {
 				log.info("No users in site: " + siteId + ", skipping.");
 				continue;
 			}
+			Collections.sort(users, new LastNameComparator());
 
 			//get gradebook for this site, skip if none
 			Gradebook gradebook = null;
@@ -117,7 +117,7 @@ public class GradebookExportByTerm implements Job {
 					log.info("No assignments for site: " + siteId + ", skipping.");
 					continue;
 				}
-				log.debug("Assignments size: " + assignments.size());
+				log.debug("Assignments size: {}", assignments.size());
 
 				//get course grades. This uses entered grades preferentially
 				Map<String, String> courseGrades = gradebookService.getImportCourseGrade(gradebook.getUid()); 
@@ -160,7 +160,7 @@ public class GradebookExportByTerm implements Job {
 					//add the course grade. Note the map has eids.
 					g.addGrade(COURSE_GRADE_ASSIGNMENT_ID, courseGrades.get(u.getEid()));
 
-					log.debug("Course Grade: " + courseGrades.get(u.getEid()));
+					log.debug("Course Grade: {}", courseGrades.get(u.getEid()));
 
 					grades.add(g);
 				}
@@ -404,10 +404,14 @@ public class GradebookExportByTerm implements Job {
 		
 		try {
 			
-			Set<String> userIds = siteService.getSite(siteId).getUsersIsAllowed("gradebook.viewOwnGrades");			
+			Set<String> userIds = siteService.getSite(siteId).getUsersIsAllowed("section.role.student");			
 			return userDirectoryService.getUsers(userIds);
 
 		} catch (IdUnusedException e) {
+			log.warn("IdUnused trying to get students for site {}", siteId);
+			return null;
+		} catch (Exception ee) {
+			log.warn("Exception trying to get students for site {}", siteId, ee);
 			return null;
 		}
 		
