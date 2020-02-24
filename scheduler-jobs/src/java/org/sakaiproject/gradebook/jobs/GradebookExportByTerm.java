@@ -35,6 +35,7 @@ import org.sakaiproject.gradebook.model.StudentGrades;
 import org.sakaiproject.service.gradebook.shared.Assignment;
 import org.sakaiproject.service.gradebook.shared.CategoryDefinition;
 import org.sakaiproject.service.gradebook.shared.CommentDefinition;
+import org.sakaiproject.service.gradebook.shared.CourseGrade;
 import org.sakaiproject.service.gradebook.shared.GradebookNotFoundException;
 import org.sakaiproject.service.gradebook.shared.GradebookService;
 import org.sakaiproject.site.api.Site;
@@ -117,10 +118,11 @@ public class GradebookExportByTerm implements Job {
 					log.info("No assignments for site: " + siteId + ", skipping.");
 					continue;
 				}
-				log.debug("Assignments size: " + assignments.size());
+				log.debug("Assignments size: {}", assignments.size());
 
 				//get course grades. This uses entered grades preferentially
-				Map<String, String> courseGrades = gradebookService.getImportCourseGrade(gradebook.getUid()); 
+				final Set<String> userUuids = siteService.getSite(siteId).getUsersIsAllowed("section.role.student");
+				Map<String, CourseGrade> courseGrades = gradebookService.getCourseGradeForStudents(gradebook.getUid(), new ArrayList<String> (userUuids));
 
 				//get any categories
 				categoryDefinitions = gradebookService.getCategoryDefinitions(siteId);
@@ -130,7 +132,7 @@ public class GradebookExportByTerm implements Job {
 
 					StudentGrades g = new StudentGrades(u.getId(), u.getEid());
 
-					log.debug("Member: " + u.getId() + " - " + u.getEid());
+					log.debug("Member: {} - {}", u.getId(), u.getEid());
 
 					//add in the displayname (lastname, firstname)
 					g.setDisplayName(u.getSortName());
@@ -138,12 +140,12 @@ public class GradebookExportByTerm implements Job {
 					//if a user has no grade for the assignment ensure they are not missed
 					for(Assignment a: assignments) {
 
-						log.debug("Assignment: " + a.getId() + ": " + a.getName());
+						log.debug("Assignment: {} : {}", a.getId(), a.getName());
 
 						String points = gradebookService.getAssignmentScoreString(gradebook.getUid(), a.getId(), u.getId());
 						g.addGrade(a.getId(), points);
 
-						log.debug("Points: " + points);
+						log.debug("Points: {}", points);
 					}
 
 					//determine a grade for any categories
@@ -158,7 +160,8 @@ public class GradebookExportByTerm implements Job {
 					g.addGrade(TOTAL_POINTS_POSSIBLE, this.getTotalPointsPossible(gradebook.getUid(), u.getId(), assignments));				
 
 					//add the course grade. Note the map has eids.
-					g.addGrade(COURSE_GRADE_ASSIGNMENT_ID, courseGrades.get(u.getEid()));
+					final CourseGrade cg = courseGrades.get(u.getEid());
+					g.addGrade(COURSE_GRADE_ASSIGNMENT_ID, cg.getDisplayGrade());
 
 					log.debug("Course Grade: " + courseGrades.get(u.getEid()));
 
