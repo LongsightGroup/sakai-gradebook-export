@@ -98,11 +98,11 @@ public class GradebookExportByTerm implements Job {
 
 			//get users in site, skip if none
 			List<User> users = getValidUsersInSite(siteId);
+			Collections.sort(users, new LastNameComparator());
 			if(users == null || users.isEmpty()) {
 				log.info("No users in site: " + siteId + ", skipping.");
 				continue;
 			}
-			Collections.sort(users, new LastNameComparator());
 
 			//get gradebook for this site, skip if none
 			Gradebook gradebook = null;
@@ -121,6 +121,7 @@ public class GradebookExportByTerm implements Job {
 				log.debug("Assignments size: {}", assignments.size());
 
 				//get course grades. This uses entered grades preferentially
+				final Set<String> userUuids = siteService.getSite(siteId).getUsersIsAllowed("section.role.student");
 				Map<String, CourseGrade> courseGrades = gradebookService.getCourseGradeForStudents(gradebook.getUid(), new ArrayList<String> (userUuids));
 
 				//get any categories
@@ -162,7 +163,7 @@ public class GradebookExportByTerm implements Job {
 					final CourseGrade cg = courseGrades.get(u.getEid());
 					g.addGrade(COURSE_GRADE_ASSIGNMENT_ID, cg.getDisplayGrade());
 
-					log.debug("Course Grade: {}", courseGrades.get(u.getEid()));
+					log.debug("Course Grade: " + courseGrades.get(u.getEid()));
 
 					grades.add(g);
 				}
