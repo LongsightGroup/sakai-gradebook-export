@@ -161,11 +161,11 @@ public class GradebookExportByTerm implements Job {
 
 					//add the course grade. Note the map has eids.
 					final CourseGrade cg = courseGrades.get(u.getEid());
-					g.addGrade(COURSE_GRADE_ASSIGNMENT_ID, cg.getDisplayGrade());
-
-					log.debug("Course Grade: " + courseGrades.get(u.getEid()));
-
-					grades.add(g);
+					if (cg != null) {
+						g.addGrade(COURSE_GRADE_ASSIGNMENT_ID, cg.getDisplayGrade());
+						grades.add(g);
+						log.debug("Course Grade: {}", cg);
+					}
 				}
 			} catch (GradebookNotFoundException gbe) {
 				log.info("No gradebook for site: " + siteId + ", skipping.");
