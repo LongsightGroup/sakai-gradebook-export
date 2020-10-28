@@ -159,12 +159,15 @@ public class GradebookExportByTerm implements Job {
 					//add total points possible
 					g.addGrade(TOTAL_POINTS_POSSIBLE, this.getTotalPointsPossible(gradebook.getUid(), u.getId(), assignments));				
 
-					//add the course grade. Note the map has eids.
-					final CourseGrade cg = courseGrades.get(u.getEid());
+					//add the course grade
+					final CourseGrade cg = courseGrades.get(u.getId());
 					if (cg != null) {
 						g.addGrade(COURSE_GRADE_ASSIGNMENT_ID, cg.getDisplayGrade());
 						grades.add(g);
 						log.debug("Course Grade: {}", cg);
+					}
+					else {
+						log.warn("Course Grade Empty, size={}", courseGrades == null ? 0 : courseGrades.size());
 					}
 				}
 			} catch (GradebookNotFoundException gbe) {
